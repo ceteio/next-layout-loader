@@ -1,6 +1,6 @@
 {
   "name": "@ceteio/next-layout-loader",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "description": "Automatic next.js layout component loader",
   "main": "dist/ceteio-next-layout-loader.cjs.js",
   "module": "dist/ceteio-next-layout-loader.esm.js",
@@ -37,9 +37,9 @@
     "@babel/preset-env": "^7.16.5",
     "@changesets/cli": "^2.18.1",
     "@preconstruct/cli": "^2.1.5",
-    "np": "^7.6.0",
     "babel-plugin-codegen": "^4.1.5",
-    "babel-plugin-preval": "^5.0.0"
+    "babel-plugin-preval": "^5.0.0",
+    "np": "^7.6.0"
   },
   "peerDependencies": {
     "babel-plugin-codegen": "^4.1.5",
