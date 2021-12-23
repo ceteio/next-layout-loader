@@ -1,6 +1,6 @@
 import NextLink from "next/link";
 const filename = preval`module.exports = __filename`;
-const Layout = codegen.require("../../src/layouts", filename);
+const Layout = codegen.require("@ceteio/next-layout-loader", filename);
 
 export default function Home() {
   return (
