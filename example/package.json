@@ -1,11 +1,12 @@
 {
-  "name": "test-codegen",
+  "name": "nextjs-layout-loader-example",
   "private": true,
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "postinstall": "patch-package"
   },
   "dependencies": {
     "@ceteio/next-layout-loader": "latest",
@@ -14,9 +15,10 @@
     "react-dom": "17.0.2"
   },
   "devDependencies": {
-    "babel-plugin-codegen": "^4.1.5",
+    "babel-plugin-codegen": "4.1.5",
     "babel-plugin-preval": "^5.0.0",
     "eslint": "8.5.0",
-    "eslint-config-next": "12.0.7"
+    "eslint-config-next": "12.0.7",
+    "patch-package": "^6.4.7"
   }
 }

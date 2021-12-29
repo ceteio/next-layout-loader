@@ -1,0 +1,16 @@
+diff --git a/node_modules/babel-plugin-codegen/dist/helpers.js b/node_modules/babel-plugin-codegen/dist/helpers.js
+index e292c8a..472d128 100644
+--- a/node_modules/babel-plugin-codegen/dist/helpers.js
++++ b/node_modules/babel-plugin-codegen/dist/helpers.js
+@@ -99,9 +99,8 @@ function resolveModuleContents({
+   filename,
+   module
+ }) {
+-  const resolvedPath = _path.default.resolve(_path.default.dirname(filename), module);
+-
+-  const code = _fs.default.readFileSync(require.resolve(resolvedPath));
++  const resolvedPath = require.resolve(module, { paths: [_path.default.dirname(filename)] })
++  const code = _fs.default.readFileSync(resolvedPath);
+ 
+   return {
+     code,

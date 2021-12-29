@@ -17,7 +17,7 @@
 </div>
 
 ```
-yarn add @ceteio/next-layout-loader babel-plugin-codegen babel-plugin-preval
+yarn add @ceteio/next-layout-loader
 ```
 
 ## Usage
@@ -77,7 +77,7 @@ Now, `<Layout>` is a composition of all `_layout.tsx` files found in the
 `pages/dashboard/user/_layout.tsx`, `pages/dashboard/_layout.tsx`, and
 `pages/_layout.tsx`).
 
-## Required Config
+## Setup
 
 The usage of [`preval`](https://github.com/kentcdodds/babel-plugin-preval) &
 [`codegen`](https://github.com/kentcdodds/babel-plugin-codegen) necessitates
@@ -87,6 +87,10 @@ using `babel`, and hence opting-out of `swc` _(if you know how to do codegen in
 layout files are loaded correctly, you must include the `codegen` and `preval`
 plugins:
 
+```
+yarn add babel-plugin-codegen@4.1.5 babel-plugin-preval
+```
+
 `.babelrc`
 
 ```json
@@ -95,6 +99,46 @@ plugins:
   "plugins": ["codegen", "preval"]
 }
 ```
+
+A patch is necessary for `babel-plugin-codegen` to correctly import the
+`@ceteio/next-layout-loader` module:
+
+```
+yarn add patch-package postinstall-postinstall
+```
+
+`package.json`
+
+```json
+{
+  "scripts": {
+    "postinstall": "patch-package"
+  }
+}
+```
+
+And create a new file `patches/babel-plugin-codegen+4.1.5.patch`:
+
+```
+diff --git a/node_modules/babel-plugin-codegen/dist/helpers.js b/node_modules/babel-plugin-codegen/dist/helpers.js
+index e292c8a..472d128 100644
+--- a/node_modules/babel-plugin-codegen/dist/helpers.js
++++ b/node_modules/babel-plugin-codegen/dist/helpers.js
+@@ -99,9 +99,8 @@ function resolveModuleContents({
+   filename,
+   module
+ }) {
+-  const resolvedPath = _path.default.resolve(_path.default.dirname(filename), module);
+-
+-  const code = _fs.default.readFileSync(require.resolve(resolvedPath));
++  const resolvedPath = require.resolve(module, { paths: [_path.default.dirname(filename)] })
++  const code = _fs.default.readFileSync(resolvedPath);
+
+   return {
+     code,
+```
+
+Then re-run `yarn`.
 
 ## Parameters
 
@@ -127,7 +171,7 @@ An object of further options to affect how the library loads layout files.
 ```javascript
 codegen.require("@ceteio/next-layout-loader", filename, {
   layoutsDir,
-  layoutFilenames,
+  layoutFilenames
 });
 ```
 
