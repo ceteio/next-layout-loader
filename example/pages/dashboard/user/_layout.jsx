@@ -1,10 +1,10 @@
 export default function Layout({ greeting, children }) {
   return (
-    <div style={{ border: "1px solid blue", padding: "1rem" }}>
-      <h1>{greeting}</h1>
+    <div style={{ backgroundColor: "#fef3c7", padding: "1rem" }}>
       <p>
         <code>pages/dashboard/user/_layout</code>
       </p>
+      <h1>{greeting}</h1>
       {children}
     </div>
   );

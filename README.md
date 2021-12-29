@@ -22,28 +22,37 @@ yarn add @ceteio/next-layout-loader
 
 ## Usage
 
-Add `_layout.tsx` files with default exports in your `pages/` directory:
+Add `_layout.tsx` files in your `pages/` directory:
 
 ```
 pages
-├── dashboard
-│   ├── _layout.tsx
-│   └── user
-│       ├── _layout.tsx
-│       └── index.tsx
+├── _app.tsx
 ├── _layout.tsx
-└── index.tsx
+├── index.tsx
+└── dashboard
+    ├── _layout.tsx
+    └── user
+        ├── _layout.tsx
+        └── index.tsx
 ```
+
+_(Supports `_layout.tsx`, `_layout.ts`, `_layout.jsx`, `_layout.js`, or [any
+custom filename with the `layoutFilenames` option](#optionslayoutfilenames))_
 
 For example:
 
 ```javascript
 // pages/_layout.tsx
+import { useState } from "react";
+
 export default function Layout({ children }) {
+  // State is maintained between client-side route changes!
+  const [count, setCount] = useState(0);
   return (
     <div style={{ border: "1px solid gray", padding: "1rem" }}>
       <p>
         <code>pages/_layout</code>
+        <button onClick={() => setCount(count + 1)}>Count: {count}</button>
       </p>
       {children}
     </div>
@@ -54,30 +63,33 @@ export default function Layout({ children }) {
 export const getStaticProps = async () => ({ notFound: true });
 ```
 
-Next, load the layout component with
+Next, wrap your `_app` with layout loading logic (_powered by
 [`preval`](https://github.com/kentcdodds/babel-plugin-preval) &
-[`codegen`](https://github.com/kentcdodds/babel-plugin-codegen):
+[`codegen`](https://github.com/kentcdodds/babel-plugin-codegen)_):
 
+<!-- prettier-ignore -->
 ```javascript
-// pages/dashboard/user/index.tsx
+// pages/_app.jsx
 const filename = preval`module.exports = __filename`;
-const Layout = codegen.require("@ceteio/next-layout-loader", filename);
+const withLayoutLoader = codegen.require("@ceteio/next-layout-loader", filename);
 
-export default function User() {
-  return (
-    <Layout>
-      <h1>Hello world</h1>
-    </Layout>
-  );
-}
+// Automatically renders _layout files appropriate for the current route
+export default withLayoutLoader(({ Component, pageProps }) => (
+  <Component {...pageProps} />
+));
 ```
 
-Now, `<Layout>` is a composition of all `_layout.tsx` files found in the
-`pages/` directory from the current file, up to the root (ie;
-`pages/dashboard/user/_layout.tsx`, `pages/dashboard/_layout.tsx`, and
-`pages/_layout.tsx`).
+Now load your pages to see the layouts automatically applied!
 
 ## Setup
+
+Install all the dependencies:
+
+```
+yarn add @ceteio/next-layout-loader
+yarn add babel-plugin-codegen@4.1.5 babel-plugin-preval
+yarn add patch-package postinstall-postinstall
+```
 
 The usage of [`preval`](https://github.com/kentcdodds/babel-plugin-preval) &
 [`codegen`](https://github.com/kentcdodds/babel-plugin-codegen) necessitates
@@ -86,10 +98,6 @@ using `babel`, and hence opting-out of `swc` _(if you know how to do codegen in
 [#1](https://github.com/ceteio/next-layout-loader/issues/1)!)_. To ensure the
 layout files are loaded correctly, you must include the `codegen` and `preval`
 plugins:
-
-```
-yarn add babel-plugin-codegen@4.1.5 babel-plugin-preval
-```
 
 `.babelrc`
 
@@ -102,10 +110,6 @@ yarn add babel-plugin-codegen@4.1.5 babel-plugin-preval
 
 A patch is necessary for `babel-plugin-codegen` to correctly import the
 `@ceteio/next-layout-loader` module:
-
-```
-yarn add patch-package postinstall-postinstall
-```
 
 `package.json`
 
@@ -140,7 +144,7 @@ index e292c8a..472d128 100644
 
 Then re-run `yarn`.
 
-## Parameters
+## Configuration
 
 ```
 codegen.require("@ceteio/next-layout-loader", <filename>[, options])
@@ -150,19 +154,19 @@ codegen.require("@ceteio/next-layout-loader", <filename>[, options])
 
 Absolute path to the current page file.
 
-Ideally, we could pass in `__filename`, however it appears `codegen.require`
-will fail when attempting to pass that in directly. The alternative is using
-`preval` to convert `__filename` into a string which is passed in:
+In the simplest case, this can be hard-coded, but wouldn't work on a different
+computer, or if you were to move your source files around. Instead, we use
+`preval` & `__filename` to automatically generate the correct path for us:
 
+<!-- prettier-ignore -->
 ```javascript
 const filename = preval`module.exports = __filename`;
-const Layout = codegen.require("@ceteio/next-layout-loader", filename);
+const withLayoutLoader = codegen.require("@ceteio/next-layout-loader", filename);
 ```
 
-A further limitation of `preval` prevents inlining the `codegen.require` &
-`preval` calls into a single line, requiring the above 2-line format. If you
-know how to minimise this boilerplate, please see
-[#2](https://github.com/ceteio/next-layout-loader/issues/2).
+_(NOTE: This must remain as 2 separate lines. If you know how to minimise this
+boilerplate, please see
+[#2](https://github.com/ceteio/next-layout-loader/issues/2)_).
 
 ### `options`
 
@@ -170,104 +174,98 @@ An object of further options to affect how the library loads layout files.
 
 ```javascript
 codegen.require("@ceteio/next-layout-loader", filename, {
-  layoutsDir,
   layoutFilenames
 });
-```
-
-#### `options.layoutsDir`
-
-_Default_: `pages`
-
-By default, layout files will be searched within the `pages` directory, however
-for some codebases it may be preferrable to keep layout files in a separate
-folder.
-
-The folder structure must match that of the `pages/` directory exactly or else
-the correct layout files will not be discovered.
-
-For example, use `layoutsDir: 'layouts'`, when working with the following folder
-directory:
-
-```
-.
-├── layouts
-│   ├── _layout.tsx
-│   └── dashboard
-│       ├── _layout.tsx
-│       └── user
-│           └── _layout.tsx
-└── pages
-    ├── index.tsx
-    └── dashboard
-        └── user
-            └── index.tsx
 ```
 
 #### `options.layoutFilenames`
 
 _Default_: `['_layout.tsx', '_layout.ts', '_layout.jsx', '_layout.js']`
 
-The possible variations of layout file names within the `layoutsDir`. Can be
-overridden to use any name or extension you like.
+The possible variations of layout file names within `pages/`. Can be overridden
+to use any name or extension you like.
 
 ## How it works
 
-Given a `pages/` directory like so:
+The easiest way to understand with an example:
 
 ```
 pages
-├── dashboard
-│   ├── _layout.tsx
-│   └── user
-│       ├── index.tsx
-│       └── _layout.tsx
 ├── index.tsx
-└── _layout.tsx
+├── _app.tsx
+├── _layout.tsx
+└── dashboard
+    ├── _layout.tsx
+    └── user
+        ├── index.tsx
+        └── _layout.tsx
 ```
 
-And a page `pages/dashboard/user/index.tsx`:
+`pages/_app.tsx`:
 
 ```javascript
 const filename = preval`module.exports = __filename`;
-const Layout = codegen.require("@ceteio/next-layout-loader", filename);
-
-export default function User() {
-  return (
-    <Layout>
-      <h1>Hello world</h1>
-    </Layout>
-  );
-}
-```
-
-`next-layout-loader` will transform the above code into (approximately):
-
-```javascript
-import dynamic from 'next/dynamic';
-
-const LayoutComp0 = dynamic(() => import('./layout.tsx'));
-const LayoutComp1 = dynamic(() => import('../layout.tsx'));
-const LayoutComp2 = dynamic(() => import('../../layout.tsx'));
-
-const Layout = ({ children, ...props }) => (
-  <LayoutComp2 {...props>
-    <LayoutComp1 {...props>
-      <LayoutComp0 {...props>
-        {children}
-      </LayoutComp0>
-    </LayoutComp1>
-  </LayoutComp2>
+const withLayoutLoader = codegen.require(
+  "@ceteio/next-layout-loader",
+  filename
 );
 
+// Automatically renders _layout files appropriate for the current route
+export default withLayoutLoader(({ Component, pageProps }) => (
+  <Component {...pageProps} />
+));
+```
+
+`pages/dashboard/user/index.tsx`:
+
+```javascript
 export default function User() {
-  return (
-    <Layout>
-      <h1>Hello world</h1>
-    </Layout>
-  );
+  return <h1>Hello world</h1>;
 }
 ```
+
+`next-layout-loader` will transform the `pages/app.tsx` into:
+
+```javascript
+import dynamic from "next/dynamic";
+import { Fragment } from "react";
+
+// A map of directories to their layout components (if they exist)
+const layoutMap = {
+  "/": __dynamic(() => import("./_layout.jsx")),
+  dashboard: __dynamic(() => import("./dashboard/_layout.jsx")),
+  "dashboard/user": __dynamic(() => import("./dashboard/user/_layout.jsx"))
+};
+
+const withLayoutLoader = wrappedFn => context => {
+  const { pageProps, router } = context;
+
+  const renderedComponent = wrappedFn(context);
+
+  return ({ Component, pageProps, router }) => {
+    const Layout1 = layoutMap["/"];
+    const Layout2 = layoutMap["dashboard"];
+    const Layout3 = layoutMap["dashboard/user"];
+
+    return (
+      <Layout1 {...pageProps}>
+        <Layout2 {...pageProps}>
+          <Layout3 {...pageProps}>
+            {renderedComponent}
+          </Layout3>
+        </Layout2>
+      </Layout1>
+    );
+  };
+})();
+
+export default withLayoutLoader(({ Component, pageProps }) => (
+  <Component {...pageProps} />
+));
+```
+
+_(Note: The above is a simplification; the real code has some extra logic to
+handle all routes and their layouts)_
 
 ## Frequently Asked Questions
 
@@ -278,3 +276,32 @@ discussion](https://github.com/vercel/next.js/discussions/26389#discussioncommen
 in the Next.js repo, but it turned out to work quite well and match my mental
 model of how nested layouts should work. So I turned it into a library that
 anyone can use.
+
+### Why is an extra layout being applied?
+
+An extra layout component can be unexpectedly rendered when you have the
+following situation:
+
+```
+pages
+├── _layout.tsx
+├── user.tsx
+└── user
+    └── _layout.tsx
+```
+
+Visiting `/user` may will render both `pages/_layout.tsx` _and_
+`pages/user/_layout.tsx`. This may not be expected (the later is in a child
+directory after all!), and is due to a difference in the way Next.js handles
+rendering pages vs how `@ceteio/next-layout-loader` loads layouts.
+
+To work around this, move `pages/user.tsx` to `pages/user/index.tsx`:
+
+```diff
+ pages
+ ├── _layout.tsx
+-├── user.tsx
+ └── user
++    ├── index.tsx
+     └── _layout.tsx
+```
