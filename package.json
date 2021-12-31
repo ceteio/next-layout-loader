@@ -1,6 +1,6 @@
 {
   "name": "@ceteio/next-layout-loader",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "Automatic next.js layout component loader",
   "main": "dist/ceteio-next-layout-loader.cjs.js",
   "module": "dist/ceteio-next-layout-loader.esm.js",
