@@ -11,7 +11,7 @@ export default function Home() {
             @ceteio/next-layout-loader
           </a>
         </code>{" "}
-        automatically loading <code>_layout</code> files from within the
+        automatically loading <code>_layout</code> files from within the{" "}
         <code>pages/</code> directory.
       </p>
       <p>
