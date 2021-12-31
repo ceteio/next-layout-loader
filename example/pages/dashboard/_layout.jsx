@@ -1,6 +1,6 @@
 export default function Layout({ children }) {
   return (
-    <div style={{ border: "1px solid green", padding: "1rem" }}>
+    <div style={{ backgroundColor: "#e9d5ff", padding: "1rem" }}>
       <p>
         <code>pages/dashboard/_layout</code>
       </p>
