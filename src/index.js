@@ -27,13 +27,6 @@ module.exports = (
   const layoutFiles = [];
   collectLayouts(path.dirname(pagesDir), path.basename(pagesDir), layoutFiles);
 
-  const maxLayoutDepth =
-    layoutFiles.reduce(
-      (maxSoFar, layoutFilePath) =>
-        Math.max(layoutFilePath.split(path.sep).length, maxSoFar),
-      0
-    ) - 1;
-
   const layoutMap = layoutFiles.reduce((memo, layoutFilePath) => {
     const relativePath = path
       .relative(pagesDir, layoutFilePath)
@@ -45,6 +38,20 @@ module.exports = (
     memo[key === "." ? "/" : key] = `./${relativePath}`;
     return memo;
   }, {});
+
+  // +1 to account for the root `_layout` file
+  const maxLayoutDepth =
+    1 +
+    Object.keys(layoutMap).reduce(
+      (maxSoFar, layoutFilePath) =>
+        Math.max(
+          // Count the number of full path segments. Uses .filter(Boolean) for the
+          // special case of '/'.split('/') === ['', ''].
+          layoutFilePath.split(path.sep).filter(Boolean).length,
+          maxSoFar
+        ),
+      0
+    );
 
   // By returning an IIFE we're able to namespace our variables, and allow the
   // callsite to dictacte the export name while keeping linters happy.
@@ -111,29 +118,4 @@ module.exports = (
       );
     };
   })();`;
-
-  //return `(() => {
-  //  const __dynamic = require('next/dynamic').default;
-  //  ${layoutFiles
-  //    .map(
-  //      (layoutFile, index) => `
-  //        const ${generatedComponentName}${index} = __dynamic(() => import('${layoutFile}'))
-  //      `
-  //    )
-  //    .join("\n")}
-  //  return ({ children, ...props }) => (
-  //    ${
-  //      layoutFiles.length
-  //        ? layoutFiles.reduce(
-  //            (componentString, _, index) => `
-  //              <${generatedComponentName}${index} {...props}>
-  //                ${componentString}
-  //              </${generatedComponentName}${index}>
-  //            `,
-  //            "{children}"
-  //          )
-  //        : "children"
-  //    }
-  //  );
-  //})();`;
 };
