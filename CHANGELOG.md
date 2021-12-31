@@ -1,5 +1,11 @@
 # @ceteio/next-layout-loader
 
+## 2.0.1
+
+### Patch Changes
+
+- 506f933: Optimise rendering by correctly limiting the maximum number of layout files to those that are actually present in the pages/ directory.
+
 ## 2.0.0
 
 ### Major Changes
