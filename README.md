@@ -4,7 +4,7 @@
   <br>
   <br>
   <p>
-    Automatic next.js layout component loader
+    File-system based nested layouts for next.js
   </p>
   <p>
     <sup>
@@ -22,7 +22,7 @@ yarn add @ceteio/next-layout-loader
 
 ## Usage
 
-Add `_layout.tsx` files in your `pages/` directory:
+Add `_layout.tsx`* files in your `pages/` directory:
 
 ```
 pages
@@ -36,8 +36,8 @@ pages
         └── index.tsx
 ```
 
-_(Supports `_layout.tsx`, `_layout.ts`, `_layout.jsx`, `_layout.js`, or [any
-custom filename with the `layoutFilenames` option](#optionslayoutfilenames))_
+_<sup>* (Supports `.tsx`, `.ts`, `.jsx`, `.js`, or [any
+custom filename with the `layoutFilenames` option](#optionslayoutfilenames))</sup>_
 
 For example:
 
@@ -45,6 +45,7 @@ For example:
 // pages/_layout.tsx
 import { useState } from "react";
 
+// children is the file-system based component as rendered by next.js
 export default function Layout({ children }) {
   // State is maintained between client-side route changes!
   const [count, setCount] = useState(0);
@@ -63,7 +64,7 @@ export default function Layout({ children }) {
 export const getStaticProps = async () => ({ notFound: true });
 ```
 
-Next, wrap your `_app` with layout loading logic (_powered by
+Next, add some one-time boilerplate to `_app` (_powered by
 [`preval`](https://github.com/kentcdodds/babel-plugin-preval) &
 [`codegen`](https://github.com/kentcdodds/babel-plugin-codegen)_):
 
@@ -264,8 +265,8 @@ export default withLayoutLoader(({ Component, pageProps }) => (
 ));
 ```
 
-_(Note: The above is a simplification; the real code has some extra logic to
-handle all routes and their layouts)_
+_<sup>(Note: The above is a simplification; the real code has some extra logic to
+handle all routes and their layouts)</sup>_
 
 ## Frequently Asked Questions
 
